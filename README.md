@@ -17,7 +17,8 @@ gallery of photos, and upload their own videos. Passwords are hashed
 - `app/api/media/[filename]` — streams an uploaded video back out, only to
   logged-in users
 - `middleware.js` — redirects signed-out users away from `/gallery`
-- `lib/db.js` — SQLite (file-based) tables for users and videos, via `better-sqlite3`
+- `lib/db.js` — plain JSON-file storage for users and videos (no native
+  dependencies, so it builds anywhere without a C++ toolchain)
 - `lib/auth.js` — password hashing + session token helpers
 - `lib/uploads.js` — shared upload-directory path + session lookup for API routes
 
@@ -68,8 +69,10 @@ the gallery.
 
 ## 3. Deploy it for real users
 
-This app stores accounts in a SQLite file on disk (`data/app.db`), so it
-needs a host with a **persistent filesystem** — not a purely serverless one.
+This app stores accounts and video records in JSON files on disk
+(`data/users.json`, `data/videos.json`), plus the uploaded video files
+themselves in `data/uploads/videos/`. It needs a host with a **persistent
+filesystem** — not a purely serverless one.
 
 **Recommended: Railway or Render**
 1. Push this project to a GitHub repo.
@@ -85,11 +88,12 @@ needs a host with a **persistent filesystem** — not a purely serverless one.
    `npm run start`.
 
 **If you'd rather use Vercel:** Vercel's serverless functions don't persist
-files between requests, so SQLite won't reliably keep your signups. To
-deploy there, swap `lib/db.js` for a hosted Postgres database (e.g. a free
-Neon or Supabase instance) using the same table shape — the rest of the
-app (routes, pages, middleware) doesn't need to change. Ask me if you'd
-like that version built out.
+files between requests, so the JSON data files and uploaded videos won't
+reliably stick around. To deploy there, you'd want to swap `lib/db.js` for
+a hosted database (e.g. a free Neon or Supabase Postgres instance) and
+store uploaded videos in an object storage service (e.g. S3 or
+Cloudflare R2) instead of local disk. Ask me if you'd like that version
+built out.
 
 ## Notes on security
 
@@ -101,3 +105,8 @@ like that version built out.
 - There's no rate limiting on login/signup yet; consider adding some
   (e.g. via your host's firewall or a package like `express-rate-limit`
   in front of the API routes) before opening this up publicly at scale.
+- Accounts and video records are stored in plain JSON files rather than a
+  real database, which keeps things dependency-free but isn't built for
+  heavy concurrent writes. It's fine for personal use or a small group;
+  for a larger public site you'd eventually want to move to a proper
+  database.

@@ -17,17 +17,15 @@ export async function POST(request) {
     return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
   }
 
-  const existing = db.prepare("SELECT id FROM users WHERE username = ?").get(username);
+  const existing = db.getUserByUsername(username);
   if (existing) {
     return NextResponse.json({ error: "That username is already taken." }, { status: 409 });
   }
 
   const passwordHash = hashPassword(password);
-  const info = db
-    .prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)")
-    .run(username, passwordHash);
+  const user = db.addUser({ username, passwordHash });
 
-  const token = createSessionToken({ id: info.lastInsertRowid, username });
+  const token = createSessionToken({ id: user.id, username });
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set(COOKIE_NAME, token, {

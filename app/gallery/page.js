@@ -18,7 +18,7 @@ function getPhotos() {
 }
 
 function getVideos() {
-  return db.prepare("SELECT * FROM videos ORDER BY created_at DESC").all();
+  return db.getVideos();
 }
 
 export default function GalleryPage() {

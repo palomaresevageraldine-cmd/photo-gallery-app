@@ -60,10 +60,14 @@ export async function POST(request) {
   const arrayBuffer = await file.arrayBuffer();
   await fs.writeFile(destPath, Buffer.from(arrayBuffer));
 
-  db.prepare(
-    `INSERT INTO videos (filename, original_name, caption, mime_type, uploader_id, uploader_username)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(uniqueName, file.name || uniqueName, caption, mimeType, session.userId, session.username);
+  db.addVideo({
+    filename: uniqueName,
+    originalName: file.name || uniqueName,
+    caption,
+    mimeType,
+    uploaderId: session.userId,
+    uploaderUsername: session.username,
+  });
 
   return NextResponse.json({ ok: true });
 }

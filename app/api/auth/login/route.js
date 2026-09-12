@@ -11,7 +11,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
   }
 
-  const user = db.prepare("SELECT * FROM users WHERE username = ?").get(username);
+  const user = db.getUserByUsername(username);
   if (!user || !verifyPassword(password, user.password_hash)) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
